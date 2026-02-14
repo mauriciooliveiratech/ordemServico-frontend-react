@@ -1,0 +1,108 @@
+.dashboard {
+  padding: 10px;
+  overflow-x: auto;
+}
+.planilha-container {
+  overflow-x: auto;
+}
+
+.planilha {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  list-style: #fff;
+  text-align: left;
+}
+
+.planilha th {
+  background: #8bb765;
+  color: white;
+  padding: 6px;
+  border: 1px solid #ccc;
+  position: sticky;
+  top: 0;
+}
+
+.planilha td {
+  border: 1px solid #ddd;
+  padding: 6px;
+  background: #8b8b8b;
+  color: white;
+}
+
+.planilha tr:nth-child(even) td:not(.status-aberto):not(.status-andamento):not(.status-finalizado)  {
+  background: #7d7d7d;
+}
+
+/* Situações */
+
+.planilha td.status-aberto {
+  background-color: #1e88e5;
+  color: #ffffff;
+}
+
+td.status-andamento {
+  background-color: #f9a825;
+  color: #fff;
+}
+
+.planilha td.status-finalizado {
+  background-color: #2e7d32;
+  color: #ffffff;
+}
+
+/* Valores negativos */
+
+td:nth-child(9) {
+  font-weight: bold;
+}
+/* Container */
+.datagrid-container {
+  border-radius: 10px;
+  padding: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Cabeçalho */
+.MuiDataGrid-columnHeaders {
+  color: #4c4b4b;
+  background: #b8dbbb!important;
+  font-weight: bold;
+  font-size: 12px;
+  
+}
+
+/* Linhas */
+.MuiDataGrid-row {
+  background-color: #c1d2c0;
+}
+
+/* Hover */
+.MuiDataGrid-row:hover {
+  background-color: #535151;
+}
+
+/* Linha alternada */
+.MuiDataGrid-row:nth-child(even) {
+  background-color: rgb(166, 212, 169)
+}
+
+/* Rodapé */
+.MuiDataGrid-footerContainer {
+  background: #58bb58;
+  padding: auto;
+  
+}
+/* diminui altura geral */
+.MuiDataGrid-row {
+  min-height: 50px !important;
+  max-height: 46px !important;
+}
+
+/* células alinhadas */
+.MuiDataGrid-cell {
+  padding-top: 0%;
+  padding-bottom: 30px;
+  line-height: 1.2;
+}

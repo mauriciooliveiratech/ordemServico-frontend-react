@@ -1,13 +1,11 @@
-//import { MarcaPage } from "./pages/MarcaPage";
+import RoutesApp from "./routes";
 
-
-//function App() {
-// return <MarcaPage />;
-//}
-
-import { ModeloPage } from "./pages/ModeloPage";
 function App() {
-return <ModeloPage />;
+  return <RoutesApp />;
 }
 
 export default App;
+
+
+
+
