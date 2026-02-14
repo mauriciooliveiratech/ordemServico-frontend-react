@@ -1,180 +1,305 @@
 import { DataGrid } from "@mui/x-data-grid";
-import type { GridColDef } from "@mui/x-data-grid";
-import { Chip } from "@mui/material";
-import { Box } from "@mui/system";
+import {
+  useGridApiRef,
+  type GridColDef,
+  type GridRowModesModel,
+  type GridEventListener,
+} from "@mui/x-data-grid";
+import {
+  GridRowModes,
+  GridRowEditStopReasons,
+} from "@mui/x-data-grid";
+import { Box, Chip, IconButton } from "@mui/material";
+import { useState } from "react";
 import type { OrdemServico } from "../../types/OrdemServico";
-import { useMemo } from "react";
+import { api } from "../../Services/api";
 
 
-type Props = {
+
+
+interface Props {
   ordens: OrdemServico[];
-};
+  setOrdens: React.Dispatch<React.SetStateAction<OrdemServico[]>>;
+  
+  
+}
 
-export default function DashboardDataGrid({ ordens }: Props) {
+
+
+
+export default function DashboardDataGrid({ ordens, setOrdens }: Props) {
+  const [rowModesModel, setRowModesModel] =
+    useState<GridRowModesModel>({});
+
+  const apiRef = useGridApiRef();
+
+  /* =======================
+     CONTROLES
+  ======================== */
+function deletarOS(id: number) {
+  const confirmar = window.confirm(
+    "Tem certeza que deseja excluir esta OS?"
+  );
+
+  if (!confirmar) return;
+
+  api.delete(`/api/os/${id}`)
+    .then(() => {
+      setOrdens((prev) => prev.filter((o) => o.id !== id));
+    })
+    .catch(() => {
+      alert("Erro ao deletar OS");
+    });
+}
+
+  const handleEditar = (id: number) => {
+    apiRef.current?.startRowEditMode({ id });
+  };
+
+  const handleSalvar = (id: number) => {
+    apiRef.current?.stopRowEditMode({ id });
+    // ❌ NÃO chama carregarOrdens
+  };
+
+  const handleCancelar = (id: number) => {
+    apiRef.current?.stopRowEditMode({
+      id,
+      ignoreModifications: true,
+    });
+  };
+
+  const handleRowEditStop: GridEventListener<"rowEditStop"> = (
+    params,
+    event
+  ) => {
+    if (params.reason === GridRowEditStopReasons.rowFocusOut) {
+      event.defaultMuiPrevented = true;
+    }
+  };
+
+  /* =======================
+     UPDATE BACKEND
+  ======================== */
+
+  const processRowUpdate = async (newRow: OrdemServico) => {
+    try {
+      const res = await api.put(`/api/os/${newRow.id}`, {
+        numeroOS: newRow.numeroOS,
+        valor: newRow.valor,
+        custo: newRow.custo,
+        observacao: newRow.observacao,
+        situacao: newRow.situacao,
+        servicoId: newRow.servicoId, // ⚠️ ID, não objeto
+      });
+
+      // 🔄 Atualiza o grid local (SEM reload)
+      setOrdens((prev) =>
+        prev.map((row) =>
+          row.id === newRow.id ? res.data : row
+        )
+      );
+
+      return res.data; // ⬅️ OBRIGATÓRIO
+    } catch (error) {
+      console.error("Erro ao salvar:", error);
+      throw error;
+    }
+  };
+
+  /* =======================
+     COLUNAS
+  ======================== */
+
   const columns: GridColDef[] = [
-   
-    { field: "id", headerName: "ID", width: 50 },
+    { field: "id", headerName: "ID", width: 30 },
 
-    { field: "numeroOS", headerName: "OS", width: 70 },
+    {
+      field: "numeroOS",
+      headerName: "OS",
+      width: 70,
+      editable: true,
+    },
 
     {
       field: "tecnico",
       headerName: "TÉCNICO",
       width: 90,
-      valueGetter: (_, row) => row.tecnico ?? "",
+      editable: true,
     },
 
     {
       field: "dtCriacao",
       headerName: "DATA LANÇAMENTO",
-      width: 165,
-      valueGetter: (_, row) =>
-        row.dtCriacao
-          ? new Date(row.dtCriacao).toLocaleString("pt-BR")
+      width: 160,
+      valueFormatter: (params) =>
+        params
+          ? new Date(params).toLocaleString("pt-BR")
           : "",
     },
 
     {
       field: "marca",
       headerName: "MARCA",
-      width: 100,
-      valueGetter: (_, row) => row.marca ?? "",
+      width: 80,
     },
 
     {
       field: "modelo",
       headerName: "MODELO",
       width: 150,
-      valueGetter: (_, row) => row.modelo ?? "",
+      editable: true,
     },
 
     {
       field: "servico",
       headerName: "SERVIÇO",
       width: 200,
-      valueGetter: (_, row) => row.servico ?? "",
+      editable: true,
+     
     },
 
-    
     {
       field: "observacao",
       headerName: "OBS",
-      width: 150,
-      valueGetter: (_, row) => row.observacao ?? "",
-      renderCell: (params) => {
-        const value = String(params.value ?? "");
-        return <span>{value}</span>;
-      },
+      width: 200,
+      editable: true,
     },
 
     {
       field: "valor",
       headerName: "VALOR",
-      width: 100,
+      width: 90,
       type: "number",
-      valueFormatter: (params) => 
+      editable: true,
+      valueFormatter: (params) =>
         `R$ ${Number(params ?? 0).toFixed(2)}`,
     },
-    
-    {
-  field: "custo",
-  headerName: "CUSTO",
-  width: 100,
-  type: "number",
-  valueFormatter: (params) =>
-    `R$ ${Number(params ?? 0).toFixed(2)}`
-   },
 
     {
-      field: "situacao",
-      headerName: "SITUAÇÃO",
-      width: 110,
-      renderCell: (params) => {
-        const value = String(params.value ?? "");
-
-        let color: "success" | "warning" | "info" | "error" | "default" = "default";
-
-        if (value === "Aberto") color = "info";
-        if (value === "Em Andamento") color = "warning";
-        if (value === "Finalizado") color = "success";
-        if (value === "Cancelado") color = "error";
-
-        return <Chip label={value} color={color} size="small" />;
-      }
+      field: "custo",
+      headerName: "CUSTO",
+      width: 90,
+      type: "number",
+      editable: true,
+      valueFormatter: (params) =>
+        `R$ ${Number(params ?? 0).toFixed(2)}`,
     },
+
+   {
+  field: "situacao",
+  headerName: "SITUAÇÃO",
+  width: 110,
+  editable: true,
+  type: "singleSelect",
+  valueOptions: [
+    "Aberto",
+    "Em Andamento",
+    "Finalizado",
+    "Cancelado",
+    "Garantia",
+  ],
+  renderCell: (params) => {
+    const colors: Record<string, string> = {
+      Aberto: "#4caf50",
+      "Em Andamento": "#ff9800",
+      Finalizado: "#1c8ef8",
+      Cancelado: "#f44336",
+      Garantia: "#7e27b0",
+    };
+
+    return (
+      <Chip
+        label={params.value}
+        size="small"
+        sx={{
+          backgroundColor: colors[params.value],
+          color: "#fff",
+        }}
+      />
+    );
+  },
+},
 
     {
       field: "acoes",
       headerName: "AÇÕES",
-      width: 80,
+      width: 150,
       sortable: false,
       filterable: false,
-      renderCell: () => (
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <button title="Ver">👁</button>
-          <button title="Editar">✏️</button>
-        </Box>
-      ),
+      renderCell: (params) => {
+        
+         const isEditing =
+          rowModesModel[params.id]?.mode === GridRowModes.Edit;
+
+
+        return isEditing ? (
+          <>
+            <IconButton  onClick={() => handleSalvar(Number(params.id))}>
+              💾
+            </IconButton>
+            <IconButton onClick={() => handleCancelar(Number(params.id))}>
+              ❌
+            </IconButton>
+          </>
+        ) : (
+
+          <><IconButton onClick={() => handleEditar(Number(params.id))}>
+              ✏️
+            </IconButton><IconButton color="error" size="small" onClick={() => deletarOS(params.row.id)}>
+              🗑️
+              </IconButton></>
+        );
+        
+      },
     },
   ];
-   // 🔹 Totalizador
-  const totalFinalizado = useMemo(() => {
-  return ordens
-    .filter(os => os.situacao === "Finalizado")
-    .reduce((total, os) => total + (os.valor ?? 0), 0);
-}, [ordens]);
 
-  const totalCusto = useMemo(() => {
-    return ordens
-    .filter(os => os.situacao === "Finalizado")
-    .reduce((acc, os) => acc + Number(os.custo ?? 0), 0);
-  }, [ordens]);
+  /* =======================
+     TOTAIS
+  ======================== */
+
+  
+
+ 
+
+  /* =======================
+     RENDER
+  ======================== */
 
   return (
-    <Box sx={{  width: "100%"}}>
-      <div style={{height: 510, width: "100%"}}>
+    <Box sx={{ width: "100%" }}>
+      <div style={{ height: 650 }}>
         <DataGrid
+
         
+          apiRef={apiRef}
           rows={ordens}
           columns={columns}
+          editMode="row"
+          rowModesModel={rowModesModel}
+          onRowModesModelChange={setRowModesModel}
+          onRowEditStop={handleRowEditStop}
+          processRowUpdate={processRowUpdate}
+          onProcessRowUpdateError={() =>
+            alert("Erro ao salvar alteração")
+          }
+          disableRowSelectionOnClick
           pageSizeOptions={[5, 10, 20]}
           initialState={{
-            pagination: { paginationModel: { pageSize: 10, page: 0 } }
+            pagination: {
+              paginationModel: { pageSize: 10, page: 0 },
+            },
           }}
-          disableRowSelectionOnClick
         />
       </div>
-
-    {/* 🔹 Rodapé com total */}
-      <Box
-        sx={{
-          marginTop: 2,
-          padding: 1,
-          background: "#2e7d32",
-          color: "#fff",
-          textAlign: "right",
-          borderRadius: 1,
-          fontFamily: "Arial",
-        }}
-      >
-        Total Faturado: R$ {totalFinalizado.toFixed(2)} &nbsp; | &nbsp;
-        Total Custo: R$ {totalCusto.toFixed(2)}
-      </Box>
-      <Box
-        sx={{
-          marginTop: 2,
-          padding: 1,
-          background: "#2e7d32",
-          color: "#fff",
-          fontWeight: "bold",
-          textAlign: "right",
-          borderRadius: 1,
-          fontFamily: "Arial",
-        }}
-      >
-        
-        Lucro Liquido: R$ {(totalFinalizado - totalCusto).toFixed(2)}
-      </Box>
     </Box>
   );
 }
+
+
+
+
+
+
+
+

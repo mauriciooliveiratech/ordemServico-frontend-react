@@ -24,7 +24,7 @@ export function OrdemServicoTable({ data }: { data: OrdemServico[] }) {
                         <td>{os.modelo}</td>
                         <td>{os.servico}</td>
                         <td>{os.situacao}</td>
-                        <td>{os.tecnico}</td>  
+                        <td>{os.usuario}</td>  
                         <td>R$ {os.valor}</td>
                     </tr>
                 ))}

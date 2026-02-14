@@ -1,21 +1,24 @@
-export type SelectOption = {
-  id: number;
-  nome: string;
-};
 
-export type OrdemServico = {
+
+export interface OrdemServico {
   id: number;
   numeroOS: string;
   dtCriacao: string;
-  tecnico: string;
+
+  usuario: string;
+  usuarioId: number;
+
   marca: string;
   modelo: string;
-  situacao: string;
+  servicoId: number;
   servico: string;
-  observacao: string;
+  observacao?: string;
+
   valor: number;
-  custo: number;
-};
+  custo: number;  
+  situacao: string;
+ 
+}
 
 
 

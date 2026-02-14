@@ -1,10 +1,9 @@
 import RoutesApp from "./routes";
 
-function App() {
+export default function App() {
   return <RoutesApp />;
 }
 
-export default App;
 
 
 
