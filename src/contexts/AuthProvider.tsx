@@ -1,4 +1,5 @@
 import { useState, type ReactNode,  } from "react";
+import { AuthContext } from "./AuthContext";    
 
 
 interface Props {
@@ -22,4 +23,3 @@ export function AuthProvider({ children }: Props) {
     </AuthContext.Provider>
   );
 }
-

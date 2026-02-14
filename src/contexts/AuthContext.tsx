@@ -1,38 +1,51 @@
-// src/contexts/AuthContext.ts
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
+import { api } from "../Services/api";
 
-interface AuthContextData {
-  usuario: any;
-  login: (user: any) => void;
-  logout: () => void;
+interface Usuario {
+  id: number;
+  nome: string;
+  perfil: "ADMIN" | "TECNICO";
 }
 
-const AuthContext = createContext<AuthContextData>({} as AuthContextData);
+interface AuthContextType {
+  usuario: Usuario | null;
+  login: (login: string, senha: string) => Promise<void>;
+  logout: () => void;
+  loading: boolean;
+}
+
+// eslint-disable-next-line react-refresh/only-export-components
+export const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [usuario, setUsuario] = useState(() => {
-    const stored = localStorage.getItem("usuario");
-    return stored ? JSON.parse(stored) : null;
-  });
+  const [usuario, setUsuario] = useState<Usuario | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  function login(user: any) {
-    setUsuario(user);
-    localStorage.setItem("usuario", JSON.stringify(user));
+  useEffect(() => {
+    const stored = localStorage.getItem("usuario");
+    if (stored) setUsuario(JSON.parse(stored));
+    setLoading(false);
+  }, []);
+
+  async function login(login: string, senha: string) {
+    const { data } = await api.post("/api/auth/login", { login, senha });
+    localStorage.setItem("usuario", JSON.stringify(data));
+    setUsuario(data);
   }
 
   function logout() {
-    setUsuario(null);
     localStorage.removeItem("usuario");
+    setUsuario(null);
   }
 
   return (
-    <AuthContext.Provider value={{ usuario, login, logout }}>
+    <AuthContext.Provider value={{ usuario, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   return useContext(AuthContext);
 }
-
