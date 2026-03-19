@@ -7,7 +7,7 @@ export type UsuarioLogado = {
 };
 
 export async function login(username: string, senha: string) {
-  const res = await api.post<UsuarioLogado>("/api/auth/login", {
+  const res = await api.post<UsuarioLogado>("/auth/login", {
     username,
     senha,
   });

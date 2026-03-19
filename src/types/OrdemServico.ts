@@ -1,19 +1,33 @@
 
 
 export interface OrdemServico {
+  servicoId: any;
   id: number;
   numeroOS: string;
+
   dtCriacao: string;
 
-  usuario: string;
-  usuarioId: number;
+  marca:{
+    id: number;
+    nome: string;
+  };
+  modelo:{
+    id: number;
+    nome: string;
+  } 
+  servico: {
+    servico_id : number;
+    id: number;
+    nome: string;
+  };
 
-  marca: string;
-  modelo: string;
-  servicoId: number;
-  servico: string;
-  observacao?: string;
+  usuario: {
+    id: number;
+    nome: string;
+    perfil: string;
+  };
 
+  observacao: string;
   valor: number;
   custo: number;  
   situacao: string;

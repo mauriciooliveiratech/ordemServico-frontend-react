@@ -13,6 +13,8 @@ interface Props {
   onAbrirMarca: () => void;
   onAbrirModelo: () => void;
   onAbrirServico: () => void;
+  onAbrirRelatorios: () => void;
+  
 }
 
 export default function MenuTopo({
@@ -20,15 +22,20 @@ export default function MenuTopo({
   onAbrirMarca,
   onAbrirModelo,
   onAbrirServico,
+  onAbrirRelatorios,
+ 
 }: Props) {
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const open = Boolean(anchorEl);
+  
+  const [anchorRelatorios, setAnchorRelatorios] = useState<null | HTMLElement>(null);
+
+  const [anchorCadastros, setAnchorCadastros] = useState<null | HTMLElement>(null);
 
   const logout = () => {
     localStorage.removeItem("usuario");
-    window.location.href = "/Login";
+    
   };
 
+  
   return (
     <AppBar position="static" color="success" sx={{ borderRadius: 4 }}>
       <Toolbar>
@@ -36,50 +43,49 @@ export default function MenuTopo({
           Sistema OS
         </Typography>
 
-        {/* CADASTROS */}
-        <Button color="inherit" onClick={(e) => setAnchorEl(e.currentTarget)}>
-          Cadastros
-        </Button>
+        {/* --- BOTÃO CADASTROS --- */}
+<Button color="inherit" onClick={(e) => setAnchorCadastros(e.currentTarget)}>
+  Cadastros
+</Button>
 
-        <Menu
-          anchorEl={anchorEl}
-          open={open}
-          onClose={() => setAnchorEl(null)}
-        >
-          <MenuItem
-            onClick={() => {
-              onAbrirMarca();
-              setAnchorEl(null);
-            }}
-          >
-            Marcas
-          </MenuItem>
+<Menu
+  anchorEl={anchorCadastros}
+  open={Boolean(anchorCadastros)}
+  onClose={() => setAnchorCadastros(null)}
+>
+  <MenuItem onClick={() => { onAbrirMarca(); setAnchorCadastros(null); }}>
+    Marcas
+  </MenuItem>
+  <MenuItem onClick={() => { onAbrirModelo(); setAnchorCadastros(null); }}>
+    Modelos
+  </MenuItem>
+  <MenuItem onClick={() => { onAbrirServico(); setAnchorCadastros(null); }}>
+    Serviços
+  </MenuItem>
+</Menu>
 
-          <MenuItem
-            onClick={() => {
-              onAbrirModelo();
-              setAnchorEl(null);
-            }}
-          >
-            Modelos
-          </MenuItem>
+| &nbsp;
 
-          <MenuItem
-            onClick={() => {
-              onAbrirServico();
-              setAnchorEl(null);
-            }}
-          >
-            Serviços
-          </MenuItem>
-        </Menu>
+{/* --- BOTÃO RELATÓRIOS --- */}
+<Button color="inherit" onClick={(e) => setAnchorRelatorios(e.currentTarget)}>
+  Relatórios
+</Button>
 
-        | &nbsp;
-
+<Menu
+  anchorEl={anchorRelatorios}
+  open={Boolean(anchorRelatorios)}
+  onClose={() => setAnchorRelatorios(null)}
+>
+  <MenuItem onClick={() => { onAbrirRelatorios(); setAnchorRelatorios(null); }}>
+    Gráfico Faturamento Anual
+  </MenuItem>
+</Menu>
+        | &nbsp;    
         <Button color="inherit" onClick={onNovaOS}>
           Nova OS
         </Button>
-        <Button color="inherit" onClick={logout}>
+        
+        <Button color="inherit" onClick={logout} >
   Sair
 </Button>
 

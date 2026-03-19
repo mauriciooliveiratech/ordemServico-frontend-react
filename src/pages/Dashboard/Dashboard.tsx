@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
-import { api } from "../../Services/api";
+import {useCallback, useEffect, useMemo, useState} from "react";
 import type { OrdemServico } from "../../types/OrdemServico";
 import DashboardDataGrid from "./DashboardDataGrid";
 import "./dashboard.css";
@@ -10,10 +9,9 @@ import MenuTopo from "../../Layout/Sidebar";
 import MarcaModal from "../Cadastros/MarcaModal";
 import ServicoModal from "../Cadastros/ServicoModal";
 import ModeloModal from "../Cadastros/ModeloModal";
+import { api } from "../../Services/api";
+import RelatoriosModal from "../Relatorios/relatorioModal";
 
-const usuario = JSON.parse(
-  localStorage.getItem("usuario") || "{}"
-);
 
 export function Dashboard() {
   const [ordens, setOrdens] = useState<OrdemServico[]>([]);
@@ -21,6 +19,21 @@ export function Dashboard() {
   const [openMarca, setOpenMarca] = useState(false);
   const [openModelo, setOpenModelo] = useState(false);
   const [openServico, setOpenServico] = useState(false);
+  const [openRelatorios, setOpenRelatorios] = useState(false);
+  
+  const carregarOrdens = useCallback(async () => {
+    try {
+      const res = await api.get("/os");
+      setOrdens(res.data);
+    } catch (err) {
+      console.error("Erro ao carregar OS:", err);
+    }
+  }, []);
+
+ useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    carregarOrdens();
+  }, [carregarOrdens]);
   
 
   /* =======================
@@ -32,24 +45,13 @@ export function Dashboard() {
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
 
-  
-  const carregarOrdens = () => {
-  if (!usuario?.id) return;
-
-  if (usuario.perfil === "ADMIN") {
-    api.get("/api/os")
-      .then(res => setOrdens(res.data))
-      .catch(console.error);
-  } else {
-    api.get(`/api/os?usuarioId=${usuario.id}`)
-      .then(res => setOrdens(res.data))
-      .catch(console.error);
-  }
-};
-
   useEffect(() => {
-    carregarOrdens();
+    api.get("/os")
+      .then(res => setOrdens(res.data))
+      .catch(err => console.error("Erro ao carregar OS:", err));
+      
   }, []);
+
 
   /* =======================
      ORDENS FILTRADAS
@@ -73,8 +75,8 @@ export function Dashboard() {
     if (!inicio || !fim) return ordens;
 
     return ordens.filter((o) => {
-      const data = new Date(o.dtCriacao);
-      return data >= inicio! && data <= fim!;
+      const criacao = new Date(o.dtCriacao);
+      return criacao >= inicio! && criacao <= fim!;
     });
   }, [ordens, mesSelecionado, dataInicio, dataFim]);
 
@@ -82,8 +84,13 @@ export function Dashboard() {
     <>
       <MenuTopo onNovaOS={() => setOpenModal(true)}
       onAbrirMarca={() => setOpenMarca(true)}
-  onAbrirModelo={() => setOpenModelo(true)}
-  onAbrirServico={() => setOpenServico(true)} />
+      onAbrirModelo={() => setOpenModelo(true)}
+      onAbrirServico={() => setOpenServico(true)} onAbrirRelatorios={() => setOpenRelatorios(true)} />
+
+  <RelatoriosModal
+          open={openRelatorios}
+          onClose={() => setOpenRelatorios(false)}
+        />
 
       <main style={{ padding: 10 }}>
         {/* CARDS CONTROLAM FILTRO */}
@@ -106,7 +113,8 @@ export function Dashboard() {
       </main>
 
       <NovaOrdemServicoModal
-        open={openModal} onClose={() => setOpenModal(false)}
+        open={openModal} 
+        onClose={() => setOpenModal(false)}
         onSuccess={() => {
           setOpenModal(false);
           carregarOrdens();
@@ -120,6 +128,5 @@ export function Dashboard() {
     </>
   );
 }
-
 
 

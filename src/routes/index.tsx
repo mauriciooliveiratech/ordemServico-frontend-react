@@ -3,7 +3,7 @@ import { Dashboard } from "../pages/Dashboard/Dashboard";
 import { MarcaPage } from "../pages/Cadastros/MarcaPage";
 import { ModeloPage } from "../pages/Cadastros/ModeloPage";
 import { ServicoPage } from "../pages/Cadastros/ServicoPage";
-import Login from "../pages/Login/Login";
+import Login from "../pages/login/Login";
 
 export default function RoutesApp() {
   return (
@@ -17,6 +17,7 @@ export default function RoutesApp() {
       <Route path="/Cadastros/marcapage" element={<MarcaPage />} />
       <Route path="/Cadastros/modelopage" element={<ModeloPage />} />
       <Route path="/Cadastros/servicopage" element={<ServicoPage />} />
+      
     </Routes>
   );
 }

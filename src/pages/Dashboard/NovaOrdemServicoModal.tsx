@@ -37,6 +37,7 @@ export default function NovaOrdemServicoModal({
     valor: "",
     custo: "",
     situacao: "Aberto",
+    
   });
 
   const [marcas, setMarcas] = useState<Option[]>([]);
@@ -47,8 +48,8 @@ export default function NovaOrdemServicoModal({
      LOAD INICIAL
   ======================== */
   useEffect(() => {
-    api.get("/api/marcas").then((res) => setMarcas(res.data));
-    api.get("/api/servicos").then((res) => setServicos(res.data));
+    api.get("/marcas").then((res) => setMarcas(res.data));
+    api.get("/servicos").then((res) => setServicos(res.data));
   }, []);
 
   /* =======================
@@ -58,8 +59,10 @@ export default function NovaOrdemServicoModal({
     if (!form.marcaId) return;
 
     api
-      .get(`/api/modelos?marcaId=${form.marcaId}`)
-      .then((res) => setModelos(res.data));
+      .get(`/modelos?marcaId=${form.marcaId}`)
+      .then(res => setModelos(res.data))
+      .catch(() => setModelos([]));
+      
   }, [form.marcaId]);
 
   /* =======================
@@ -84,7 +87,7 @@ export default function NovaOrdemServicoModal({
 
   const handleSalvar = async () => {
     try {
-      await api.post("/api/os", {
+      await api.post("/os", {
         numeroOS: form.numeroOS,
         usuarioId: Number(form.usuarioId),
         marcaId: Number(form.marcaId),
@@ -119,6 +122,7 @@ export default function NovaOrdemServicoModal({
               fullWidth
               value={form.numeroOS}
               onChange={handleChange}
+              
             />
           </Grid>
 
@@ -147,7 +151,7 @@ export default function NovaOrdemServicoModal({
         
       </DialogActions>
 
-          <Grid size={4}>
+          <Grid size={3}>
             <TextField
               select
               label="Modelo"
@@ -229,6 +233,7 @@ export default function NovaOrdemServicoModal({
               <MenuItem value="Em Andamento">Em Andamento</MenuItem>
               <MenuItem value="Finalizado">Finalizado</MenuItem>
               <MenuItem value="Cancelado">Cancelado</MenuItem>
+              <MenuItem value="Garantia">Garantia</MenuItem>
             </TextField>
           </Grid>
         </Grid>
@@ -243,7 +248,6 @@ export default function NovaOrdemServicoModal({
     </Dialog>
   );
 }
-
 
 
 

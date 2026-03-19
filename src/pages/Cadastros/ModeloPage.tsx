@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { api } from "../../api/axios";
+
 import type { Modelo } from "../../types/Modelo";
 import type { Marca } from "../../types/Marca";
+import { api } from "../../Services/api";
 
 
 
@@ -70,7 +71,7 @@ export function ModeloPage() {
   ======================== */
   return (
     <div>
-      <h2>Cadastro de Modelo</h2>
+      
 
       <input
         value={nome}

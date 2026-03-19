@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { api } from "../../api/axios";
+
 import type { Marca } from "../../types/Marca";
+import { api } from "../../Services/api";
 
 export function MarcaPage() {
   const [nome, setNome] = useState("");
@@ -41,7 +42,7 @@ export function MarcaPage() {
 
   return (
     <div>
-      <h2>Cadastro de Marca</h2>
+      
 
       <input
         value={nome}

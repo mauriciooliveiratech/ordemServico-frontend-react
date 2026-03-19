@@ -121,10 +121,10 @@ const resumoPorMarca = useMemo(() => {
   const mapa = new Map<string, number>();
 
   ordens.forEach((o) => {
-    const marca = o.marca;
-    if (!marca) return;
+    const nomemarca = String(o.marca?.nome ?? "").trim();
+    if (!nomemarca) return;
 
-    mapa.set(marca, (mapa.get(marca) ?? 0) + 1);
+    mapa.set(nomemarca, (mapa.get(nomemarca) ?? 0) + 1);
   });
 
   return Array.from(mapa.entries()).map(([marca, quantidade]) => ({
@@ -150,7 +150,9 @@ const resumoSemanal = useMemo(() => {
       const dataOS = new Date(o.dtCriacao);
       dataOS.setHours(0, 0, 0, 0);
 
-      return dataOS.getTime() === dia.getTime();
+      return dataOS.getFullYear() === dia.getFullYear() &&
+             dataOS.getMonth() === dia.getMonth() &&
+             dataOS.getDate() === dia.getDate();
     });
 
     const faturamentodia = finalizadasDia.reduce(
@@ -263,34 +265,45 @@ const resumoSemanal = useMemo(() => {
         <Card sx={{ p: 1, color: "#ffffff", backgroundColor: "#000000" }}>
           <Typography variant="subtitle2">Faturamento</Typography>
           <Typography variant="h6">
-            R$ {resumoFiltrado.faturado.toFixed(2)}
+            R$ {resumoFiltrado.faturado.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
           </Typography>
         </Card>
 
         <Card sx={{ p: 1, color: "#ffffff", backgroundColor: "#000000" }}>
           <Typography variant="subtitle2">Custo</Typography>
           <Typography variant="h6">
-            R$ {resumoFiltrado.custo.toFixed(2)}
+            R$ {resumoFiltrado.custo.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
           </Typography>
         </Card>
 
         <Card sx={{ p: 1, color: "#ffffff", backgroundColor: "#000000" }}>
           <Typography variant="subtitle2">Lucro</Typography>
           <Typography variant="h6">
-            R$ {resumoFiltrado.lucro.toFixed(2)}
+            R$ {resumoFiltrado.lucro.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
           </Typography>
         </Card>
 
-        <Card sx={{ p: 1, backgroundColor: "#e3f2fd" }}>
-          <Typography variant="subtitle2">💰 Total Acumulado</Typography>
-          <Typography variant="body2">
-            Faturado: R$ {totalGeral.faturado.toFixed(2)}
-          </Typography>
-          <Typography variant="body2">
-            Lucro: R$ {totalGeral.lucro.toFixed(2)}
-          </Typography>
-         <Typography variant="body2">Finalizadas: {totalGeral.totalOSMes}</Typography>
-        </Card>
+        <Card sx={{ p: 1, backgroundColor: "#e3f2fd", boxShadow: 1 }}>
+  <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+    💰 Total Acumulado
+  </Typography>
+  
+  <Typography variant="body2">
+    Faturado: <strong>
+      {totalGeral.faturado.toLocaleString("pt-BR", { style: 'currency', currency: 'BRL' })}
+    </strong>
+  </Typography>
+  
+  <Typography variant="body2">
+    Lucro: <strong>
+      {totalGeral.lucro.toLocaleString("pt-BR", { style: 'currency', currency: 'BRL' })}
+    </strong>
+  </Typography>
+  
+  <Typography variant="body2" sx={{ mt: 0.5 }}>
+    Finalizadas: <strong>{totalGeral.totalOSMes}</strong>
+  </Typography>
+</Card>
 
         
         <Card sx={{ p: 1, width: "31%" }}>
@@ -298,24 +311,36 @@ const resumoSemanal = useMemo(() => {
     📊 Faturamento dos Últimos 7 dias
   </Typography>
 
-  <ResponsiveContainer width="100%" height={150}>
-    <BarChart data={resumoSemanal}>
-      <XAxis dataKey="dia"  />
-      <YAxis />
-      <Tooltip/>
-      <Legend />
+  <ResponsiveContainer width="100%" height={160}>
+  <BarChart data={resumoSemanal}>
+    <XAxis dataKey="dia" />
+    <YAxis 
+      padding={{ top: 20 }} 
+      tickFormatter={(value) => value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+      fontSize={10}
+      
+      
+    />
+    <Tooltip 
+      allowEscapeViewBox={{ x: false, y: false }}
+      formatter={(value) => [value.toLocaleString('pt-BR', { minimumFractionDigits: 2 }), "Faturamento"]}
+    />
+    <Legend />
 
+    <Bar 
+      dataKey="faturamentodia"
+      name="Faturamento (R$)"
+      fill="#2e7d32"
+      label={{ 
+        fontSize: 10, 
+        position: "top",
+        fontWeight: 'bold',
+        formatter: (value) => value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })
+      }}
+    />
+  </BarChart>
+</ResponsiveContainer>
     
-      <Bar 
-        dataKey="faturamentodia"
-        name="Faturamento (R$)"
-        fill="#2e7d32"
-        label={{ fontSize: 9, position: "top" }}
-      />
-    </BarChart>
-    
-
-  </ResponsiveContainer>
   
 </Card>
 
@@ -324,10 +349,10 @@ const resumoSemanal = useMemo(() => {
     📊 OS Diárias e Finalizadas dos Últimos 7 dias
   </Typography>
 
-  <ResponsiveContainer width="100%" height={150}>
+  <ResponsiveContainer width="100%" height={160}>
     <BarChart data={resumoSemanal}>
       <XAxis dataKey="dia" />
-      <YAxis />
+      <YAxis padding={{ top: 10 }} />
       <Tooltip />
       <Legend />
 
@@ -335,7 +360,7 @@ const resumoSemanal = useMemo(() => {
         dataKey="quantidade"
         name="OS Finalizadas"
         fill="#1c8ef8"
-        label={{ fontSize: 9, position: "top"}}
+        label={{ fontSize: 10, fontWeight: 'bold', position: "top"}}
       />
      
     </BarChart>
@@ -353,7 +378,7 @@ const resumoSemanal = useMemo(() => {
   <ResponsiveContainer width="100%" height={150}>
     <BarChart data={resumoPorMarca}>
       <XAxis dataKey="marca"/>
-      <YAxis />
+      <YAxis padding={{ top: 10 }} />
       <Tooltip />
       <Legend />
 
@@ -361,7 +386,7 @@ const resumoSemanal = useMemo(() => {
         dataKey="quantidade"
         name="OS por Marca - Acumulado"
         fill="#a16fea"
-        label={{ fontSize: 9, position: "top" }}
+        label={{ fontSize: 10, fontWeight: 'bold', position: "top" }}
       />
      
     </BarChart>

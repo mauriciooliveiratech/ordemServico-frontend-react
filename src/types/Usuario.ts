@@ -1,6 +1,7 @@
 export type Usuario = {
   id: number;
-  username: string;
+  login: string;
   senha: string;
+  nome: string;
   perfil: "ADMIN" | "TECNICO"
 };
