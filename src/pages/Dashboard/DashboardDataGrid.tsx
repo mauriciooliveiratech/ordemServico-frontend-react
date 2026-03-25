@@ -124,7 +124,7 @@ export default function DashboardDataGrid({ ordens, setOrdens }: Props) {
 
   const columns: GridColDef[] = [
 
-    { field: "id", headerName: "ID", width: 30 },
+    { field: "id", headerName: "ID", width: 25 },
 
     {
       field: "numeroOS",
@@ -136,7 +136,7 @@ export default function DashboardDataGrid({ ordens, setOrdens }: Props) {
     {
       field: "usuarioId",
       headerName: "TÉCNICO",
-      width: 110,
+      width: 100,
       valueGetter: (_value, row) => row.usuario?.nome || "",
     },
 
@@ -171,7 +171,7 @@ export default function DashboardDataGrid({ ordens, setOrdens }: Props) {
     {
       field: "servicoId",
       headerName: "SERVIÇO",
-      width: 180,
+      width: 170,
       editable: true,
       type: "singleSelect",
       valueOptions: servicos.map((s) => ({
@@ -203,7 +203,7 @@ export default function DashboardDataGrid({ ordens, setOrdens }: Props) {
     {
       field: "valor",
       headerName: "VALOR",
-      width: 100,
+      width: 90,
       type: "number",
       editable: true,
       valueFormatter: (value) =>
@@ -213,7 +213,7 @@ export default function DashboardDataGrid({ ordens, setOrdens }: Props) {
     {
       field: "custo",
       headerName: "CUSTO",
-      width: 100,
+      width: 90,
       type: "number",
       editable: true,
       valueFormatter: (value) =>
@@ -268,7 +268,7 @@ export default function DashboardDataGrid({ ordens, setOrdens }: Props) {
     {
       field: "acoes",
       headerName: "AÇÕES",
-      width: 140,
+      width: 100,
       sortable: false,
       filterable: false,
 
@@ -337,7 +337,7 @@ export default function DashboardDataGrid({ ordens, setOrdens }: Props) {
 
             pagination: {
               paginationModel: {
-                pageSize: 10,
+                pageSize: 30,
                 page: 0,
               },
             },

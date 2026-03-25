@@ -2,9 +2,6 @@ import {
   Box,
   Card,
   Typography,
-  TextField,
-  Button,
-  MenuItem,
 } from "@mui/material";
 import type { OrdemServico } from "../../types/OrdemServico";
 import { useMemo } from "react";
@@ -24,16 +21,14 @@ type Props = {
 export default function DashboardCards({
   ordens,
   ordensFiltradas,
-  mesSelecionado,
-  setMesSelecionado,
-  dataInicio,
-  setDataInicio,
-  dataFim,
-  setDataFim,
 }: Props) {
+
+  
   /* =======================
      RESUMO FILTRADO
   ======================== */
+
+ 
   const resumoFiltrado = useMemo(() => {
     const finalizadas = ordensFiltradas.filter(
       (o) => o.situacao === "Finalizado"
@@ -169,66 +164,7 @@ const resumoSemanal = useMemo(() => {
 }, [ordens]);
 
   return (
-    <Box sx={{ mb: 3 , p:1}}>
-      {/* FILTROS */}
-      <Box sx={{ display: "flex", gap: 2, mb: 2, alignItems: "center" }}>
-        <TextField
-          select
-          size="small"
-          label="Mês"
-          value={mesSelecionado ?? ""}
-          onChange={(e) =>
-            setMesSelecionado(
-              e.target.value === "" ? null : Number(e.target.value)
-            )
-          }
-          sx={{ width: 150 }}
-        >
-          <MenuItem value="">Entre datas</MenuItem>
-          {Array.from({ length: 12 }).map((_, i) => (
-            <MenuItem key={i} value={i}>
-              {new Date(2024, i).toLocaleString("pt-BR", { month: "long" })}
-            </MenuItem>
-          ))}
-        </TextField>
-
-        <TextField
-          type="date"
-          size="small"
-          label="Início"
-          InputLabelProps={{ shrink: true }}
-          disabled={mesSelecionado !== null}
-          value={dataInicio}
-          onChange={(e) => {
-            setMesSelecionado(null);
-            setDataInicio(e.target.value);
-          }}
-        />
-
-        <TextField
-          type="date"
-          size="small"
-          label="Fim"
-          InputLabelProps={{ shrink: true }}
-          disabled={mesSelecionado !== null}
-          value={dataFim}
-          onChange={(e) => {
-            setMesSelecionado(null);
-            setDataFim(e.target.value);
-          }}
-        />
-
-        <Button
-          variant="outlined"
-          onClick={() => {
-            setMesSelecionado(new Date().getMonth());
-            setDataInicio("");
-            setDataFim("");
-          }}
-        >
-          Mês Atual
-        </Button>
-      </Box>
+    <Box sx={{ p: 2, display: "flex", flexDirection: "column", gap: 2 }}>
 
       {/* CARDS */}
       <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", width: "100%" }}>
@@ -283,26 +219,18 @@ const resumoSemanal = useMemo(() => {
           </Typography>
         </Card>
 
-        <Card sx={{ p: 1, backgroundColor: "#e3f2fd", boxShadow: 1 }}>
-  <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 0.5 }}>
-    💰 Total Acumulado
+        <Card sx={{ p: 1, backgroundColor: "#f3dd33", boxShadow: 1, width: "22%" }}>
+  <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 0.5, fontSize: 13 }}>
+    💰 Total de OS Finalizadas: <strong>{totalGeral.totalOSMes}</strong>
   </Typography>
   
   <Typography variant="body2">
     Faturado: <strong>
-      {totalGeral.faturado.toLocaleString("pt-BR", { style: 'currency', currency: 'BRL' })}
+      {totalGeral.faturado.toLocaleString("pt-BR", { style: 'currency', currency: 'BRL' })}</strong> | 
+      Lucro: <strong>{totalGeral.lucro.toLocaleString("pt-BR", { style: 'currency', currency: 'BRL' })}
     </strong>
   </Typography>
   
-  <Typography variant="body2">
-    Lucro: <strong>
-      {totalGeral.lucro.toLocaleString("pt-BR", { style: 'currency', currency: 'BRL' })}
-    </strong>
-  </Typography>
-  
-  <Typography variant="body2" sx={{ mt: 0.5 }}>
-    Finalizadas: <strong>{totalGeral.totalOSMes}</strong>
-  </Typography>
 </Card>
 
         
