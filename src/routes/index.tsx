@@ -3,7 +3,7 @@ import { Dashboard } from "../pages/Dashboard/Dashboard";
 import { MarcaPage } from "../pages/Cadastros/MarcaPage";
 import { ModeloPage } from "../pages/Cadastros/ModeloPage";
 import { ServicoPage } from "../pages/Cadastros/ServicoPage";
-import Login from "../pages/login/Login";
+import Login from "../pages/login/login";
 
 export default function RoutesApp() {
   return (
