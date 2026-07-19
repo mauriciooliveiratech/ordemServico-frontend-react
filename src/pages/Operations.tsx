@@ -28,11 +28,13 @@ export function Overview() {
     const dias:{[key:string]:number}={diario:1,semanal:7,mensal:30,trimestral:90,semestral:180,anual:365};
     const totalDias=dias[periodo]||7,agora=new Date(),inicio=new Date(agora);inicio.setHours(0,0,0,0);inicio.setDate(inicio.getDate()-totalDias+1);
     const filtradas=orders.filter(o=>o.data_hora&&new Date(o.data_hora)>=inicio);
-    const finalizadas=filtradas.filter(o=>o.situacao==="Finalizado"),abertas=filtradas.filter(o=>o.situacao!=="Finalizado");
+    const inicioSemanal=new Date(agora);inicioSemanal.setHours(0,0,0,0);inicioSemanal.setDate(inicioSemanal.getDate()-6);
+    const semanais=orders.filter(o=>o.data_hora&&new Date(o.data_hora)>=inicioSemanal);
+    const finalizadas=filtradas.filter(o=>o.situacao==="Finalizado"),abertas=filtradas.filter(o=>o.situacao!=="Finalizado"),finalizadasSemanais=semanais.filter(o=>o.situacao==="Finalizado");
     const faturamento=filtradas.filter(o=>o.pago).reduce((s,o)=>s+Number(o.valor_pago||o.valor||0),0);
-    const passo=Math.max(1,Math.ceil(totalDias/12)),barras=[] as {nome:string;faturamento:number;finalizadas:number}[];
-    for(let i=0;i<totalDias;i+=passo){const de=new Date(inicio);de.setDate(de.getDate()+i);const ate=new Date(de);ate.setDate(ate.getDate()+passo);const grupo=filtradas.filter(o=>{const d=new Date(o.data_hora!);return d>=de&&d<ate});barras.push({nome:de.toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"}),faturamento:grupo.filter(o=>o.pago).reduce((s,o)=>s+Number(o.valor_pago||o.valor||0),0),finalizadas:grupo.filter(o=>o.situacao==="Finalizado").length})}
-    const marcas=Object.entries(finalizadas.reduce((acc,o)=>{const marca=o.marca||"Sem marca";acc[marca]=(acc[marca]||0)+1;return acc},{} as Record<string,number>)).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([nome,total])=>({nome,total}));
+    const barras=[] as {nome:string;faturamento:number;finalizadas:number}[];
+    for(let i=0;i<7;i++){const de=new Date(inicioSemanal);de.setDate(de.getDate()+i);const ate=new Date(de);ate.setDate(ate.getDate()+1);const grupo=semanais.filter(o=>{const d=new Date(o.data_hora!);return d>=de&&d<ate});barras.push({nome:de.toLocaleDateString("pt-BR",{weekday:"short",day:"2-digit"}).replace(".",""),faturamento:grupo.filter(o=>o.pago).reduce((s,o)=>s+Number(o.valor_pago||o.valor||0),0),finalizadas:grupo.filter(o=>o.situacao==="Finalizado").length})}
+    const marcas=Object.entries(finalizadasSemanais.reduce((acc,o)=>{const marca=o.marca||"Sem marca";acc[marca]=(acc[marca]||0)+1;return acc},{} as Record<string,number>)).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([nome,total])=>({nome,total}));
     return {filtradas,finalizadas,abertas,faturamento,barras,marcas,entradas:abertas.filter(o=>o.situacao==="Entrada").length,garantias:abertas.filter(o=>o.situacao==="Garantia").length,pendencias:abertas.filter(o=>o.situacao==="Pendente").length};
   },[orders,periodo]);
   const zeroRows=insumosZerados.length?insumosZerados.map(i=><tr key={i.id}><td><b>{i.sku}</b></td><td>{i.nome}</td><td>{i.modelo||"—"}</td><td><Chip size="small" color="error" label={`${i.estoque} ${i.unidade}`}/></td></tr>):<tr><td colSpan={4}>Nenhum insumo com estoque zerado</td></tr>;
@@ -45,9 +47,9 @@ export function Overview() {
       <Metric title="Insumos zerados" value={String(insumosZerados.length)} detail="Clique no ícone para visualizar" icon={<Inventory2Outlined />} warning onClick={()=>setZeroOpen(true)} />
     </Grid>
     <Grid container spacing={3}>
-      <Grid size={{xs:12,lg:4}}><DashboardChart title="Faturamento" subtitle="Valores pagos no período" data={dashboard.barras} dataKey="faturamento" color="#249a6a" currency/></Grid>
-      <Grid size={{xs:12,lg:4}}><DashboardChart title="OS finalizadas" subtitle="Finalizações por período" data={dashboard.barras} dataKey="finalizadas" color="#3978d4"/></Grid>
-      <Grid size={{xs:12,lg:4}}><DashboardChart title="Marcas mais finalizadas" subtitle="OS finalizadas por marca" data={dashboard.marcas} dataKey="total" color="#8b5cf6"/></Grid>
+      <Grid size={{xs:12,lg:4}}><DashboardChart title="Faturamento semanal" subtitle="Valores pagos nos últimos 7 dias" data={dashboard.barras} dataKey="faturamento" color="#249a6a" currency/></Grid>
+      <Grid size={{xs:12,lg:4}}><DashboardChart title="OS finalizadas na semana" subtitle="Finalizações nos últimos 7 dias" data={dashboard.barras} dataKey="finalizadas" color="#3978d4"/></Grid>
+      <Grid size={{xs:12,lg:4}}><DashboardChart title="Marcas mais finalizadas" subtitle="Resultado semanal por marca" data={dashboard.marcas} dataKey="total" color="#8b5cf6"/></Grid>
     </Grid>
     <OrderTable title="Ordens recentes" orders={dashboard.filtradas.slice(0,10)} />
     <Dialog open={zeroOpen} onClose={()=>setZeroOpen(false)} fullWidth maxWidth="md">
