@@ -1,15 +1,11 @@
 import { Add, ArrowDownward, ArrowUpward, BuildOutlined, CheckCircleOutline, Inventory2Outlined, MoreHoriz, PointOfSaleOutlined, Search, WarningAmber } from "@mui/icons-material";
 import { Box, Button, Card, Chip, Grid, IconButton, InputAdornment, LinearProgress, MenuItem, Paper, Stack, Tab, Tabs, TextField, Typography } from "@mui/material";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { api } from "../Services/api";
 
 const money = (value: number) => value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-const orders = [
-  { id: "OS-1048", cliente: "Carlos Mendes", equipamento: "iPhone 14 Pro", servico: "Troca de tela", status: "Em andamento", valor: 890, data: "18/07/2026" },
-  { id: "OS-1047", cliente: "Ana Paula Lima", equipamento: "Samsung S23", servico: "Reparo conector", status: "Aguardando peça", valor: 320, data: "18/07/2026" },
-  { id: "OS-1046", cliente: "Tech Solutions", equipamento: "MacBook Air M2", servico: "Manutenção preventiva", status: "Finalizada", valor: 480, data: "17/07/2026" },
-  { id: "OS-1045", cliente: "Marcos Rocha", equipamento: "Moto G84", servico: "Troca de bateria", status: "Aberta", valor: 260, data: "17/07/2026" },
-];
+type OverviewOrder={id:number;numero:string;cliente:string;modelo:string;servico:string;situacao:string;valor:number;custo:number;data_hora?:string};
 const stock = [
   { nome: "Tela iPhone 14 Pro OLED", sku: "TEL-IP14P", qtd: 3, min: 5, custo: 690 },
   { nome: "Conector USB-C Samsung", sku: "CON-SAM-03", qtd: 4, min: 8, custo: 38 },
@@ -22,6 +18,8 @@ const statusColor = (s: string) => s === "Finalizada" ? "success" : s === "Aguar
 const panel = { border: "1px solid #e2e9e5", borderRadius: 3, boxShadow: "0 3px 14px rgba(28,60,47,.04)" };
 
 export function Overview() {
+  const [orders,setOrders]=useState<OverviewOrder[]>([]);
+  useEffect(()=>{api.get("/os").then(r=>setOrders(r.data.slice(0,10))).catch(()=>setOrders([]))},[]);
   return <Stack spacing={3}>
     <Box><Typography variant="h4" fontWeight={800}>Bom dia, Maurício 👋</Typography><Typography color="text.secondary">Aqui está o resumo da sua oficina hoje.</Typography></Box>
     <Grid container spacing={2}>
@@ -34,13 +32,13 @@ export function Overview() {
       <Grid size={{ xs: 12, lg: 8 }}><Paper sx={{ ...panel, p: 3 }}><Stack direction="row" justifyContent="space-between"><Box><Typography fontWeight={800} fontSize={18}>Faturamento mensal</Typography><Typography fontSize={13} color="text.secondary">Receita bruta nos últimos 7 meses</Typography></Box><Chip label="2026" size="small" /></Stack><Box sx={{ height: 270, mt: 3 }}><ResponsiveContainer><BarChart data={chart}><CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#edf1ef"/><XAxis dataKey="n" axisLine={false} tickLine={false}/><YAxis axisLine={false} tickLine={false} tickFormatter={v => `${v/1000}k`}/><Tooltip formatter={(v) => money(Number(v))}/><Bar dataKey="v" fill="#249a6a" radius={[6,6,0,0]} barSize={28}/></BarChart></ResponsiveContainer></Box></Paper></Grid>
       <Grid size={{ xs: 12, lg: 4 }}><Paper sx={{ ...panel, p: 3, height: "100%" }}><Typography fontWeight={800} fontSize={18}>Estoque crítico</Typography><Typography fontSize={13} color="text.secondary" mb={2}>Itens abaixo do mínimo</Typography>{stock.slice(0,3).map(i => <Box key={i.sku} sx={{ py: 1.5, borderBottom: "1px solid #edf1ef" }}><Stack direction="row" justifyContent="space-between"><Typography fontSize={13} fontWeight={700}>{i.nome}</Typography><Chip size="small" color="error" variant="outlined" label={`${i.qtd} un.`}/></Stack><Typography fontSize={11} color="text.secondary">Mínimo: {i.min} unidades</Typography></Box>)}<Button fullWidth sx={{ mt: 2 }}>Ver todo o estoque</Button></Paper></Grid>
     </Grid>
-    <OrderTable title="Ordens recentes" />
+    <OrderTable title="Ordens recentes" orders={orders} />
   </Stack>;
 }
 
 function Metric({ title, value, detail, icon, positive, warning }: any) { return <Grid size={{ xs: 12, sm: 6, lg: 3 }}><Card sx={{ ...panel, p: 2.5 }}><Stack direction="row" justifyContent="space-between"><Box><Typography color="text.secondary" fontSize={13}>{title}</Typography><Typography fontWeight={800} fontSize={25} mt={.5}>{value}</Typography></Box><Box sx={{ width: 42, height: 42, borderRadius: 2, display: "grid", placeItems: "center", bgcolor: warning ? "#fff3e2" : "#e6f5ee", color: warning ? "#d07a18" : "#21865f" }}>{icon}</Box></Stack><Typography fontSize={11} color={positive ? "success.main" : warning ? "warning.main" : "text.secondary"} mt={1.5}>{positive && <ArrowUpward sx={{ fontSize: 12 }}/>} {detail}</Typography></Card></Grid> }
 
-function OrderTable({ title = "Ordens de serviço" }: { title?: string }) { return <Paper sx={{ ...panel, overflow: "hidden" }}><Stack direction={{ xs: "column", sm: "row" }} sx={{ p: 2.5 }} alignItems={{ sm: "center" }} gap={2}><Box><Typography fontWeight={800} fontSize={18}>{title}</Typography><Typography fontSize={12} color="text.secondary">Acompanhe os atendimentos da oficina</Typography></Box><TextField size="small" placeholder="Buscar OS ou cliente..." sx={{ ml: { sm: "auto" } }} slotProps={{ input: { startAdornment: <InputAdornment position="start"><Search fontSize="small"/></InputAdornment> } }}/><Button variant="contained" startIcon={<Add />}>Nova OS</Button></Stack><Box sx={{ overflowX: "auto" }}><Box component="table" sx={{ width: "100%", borderCollapse: "collapse", minWidth: 800, '& th': { bgcolor: "#f7f9f8", color: "#6a7e76", fontSize: 11, textAlign: "left", py: 1.4, px: 2.5 }, '& td': { borderTop: "1px solid #edf1ef", py: 1.6, px: 2.5, fontSize: 13 } }}><thead><tr><th>ORDEM</th><th>CLIENTE / EQUIPAMENTO</th><th>SERVIÇO</th><th>STATUS</th><th>VALOR</th><th>DATA</th><th></th></tr></thead><tbody>{orders.map(o => <tr key={o.id}><td><Typography fontSize={13} fontWeight={800} color="success.main">{o.id}</Typography></td><td><b>{o.cliente}</b><br/><span style={{ color: "#778a82", fontSize: 12 }}>{o.equipamento}</span></td><td>{o.servico}</td><td><Chip size="small" color={statusColor(o.status) as any} variant="outlined" label={o.status}/></td><td><b>{money(o.valor)}</b></td><td>{o.data}</td><td><IconButton size="small"><MoreHoriz/></IconButton></td></tr>)}</tbody></Box></Box></Paper> }
+function OrderTable({ title = "Ordens de serviço",orders=[] }: { title?: string;orders?:OverviewOrder[] }) { return <Paper sx={{ ...panel, overflow: "hidden" }}><Stack direction={{ xs: "column", sm: "row" }} sx={{ p: 2.5 }} alignItems={{ sm: "center" }} gap={2}><Box><Typography fontWeight={800} fontSize={18}>{title}</Typography><Typography fontSize={12} color="text.secondary">Acompanhe os atendimentos da oficina</Typography></Box><TextField size="small" placeholder="Buscar OS ou cliente..." sx={{ ml: { sm: "auto" } }} slotProps={{ input: { startAdornment: <InputAdornment position="start"><Search fontSize="small"/></InputAdornment> } }}/><Button variant="contained" startIcon={<Add />}>Nova OS</Button></Stack><Box sx={{ overflowX: "auto" }}><Box component="table" sx={{ width: "100%", borderCollapse: "collapse", minWidth: 800, '& th': { bgcolor: "#f7f9f8", color: "#6a7e76", fontSize: 11, textAlign: "left", py: 1.4, px: 2.5 }, '& td': { borderTop: "1px solid #edf1ef", py: 1.6, px: 2.5, fontSize: 13 } }}><thead><tr><th>ORDEM</th><th>CLIENTE / MODELO</th><th>SERVIÇO</th><th>STATUS</th><th>VALOR</th><th>DATA</th><th></th></tr></thead><tbody>{orders.map(o => <tr key={o.id}><td><Typography fontSize={13} fontWeight={800} color="success.main">{o.numero}</Typography></td><td><b>{o.cliente}</b><br/><span style={{ color: "#778a82", fontSize: 12 }}>{o.modelo}</span></td><td>{o.servico}</td><td><Chip size="small" color={statusColor(o.situacao) as any} variant="outlined" label={o.situacao}/></td><td><b>{money(Number(o.valor||0))}</b><br/><span style={{color:"#778a82",fontSize:10}}>Custo: {money(Number(o.custo||0))}</span></td><td>{o.data_hora?new Date(o.data_hora).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"}):"—"}</td><td><IconButton size="small"><MoreHoriz/></IconButton></td></tr>)}</tbody></Box></Box></Paper> }
 
 export function Orders() { return <Stack spacing={3}><PageTitle title="Ordens de serviço" subtitle="Cadastre, acompanhe e finalize os atendimentos."/><OrderTable /></Stack> }
 
