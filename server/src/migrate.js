@@ -14,6 +14,8 @@ try{
     const client=await pool.connect();
     try{await client.query("begin");await client.query(await fs.readFile(path.join(root,name),"utf8"));await client.query("insert into schema_migrations(nome) values($1)",[name]);await client.query("commit");console.log(`Migração aplicada: ${name}`)}catch(e){await client.query("rollback");throw e}finally{client.release()}
   }
+  await pool.query("alter table insumos add column if not exists modelo text");
+  await pool.query("update insumos set modelo=regexp_replace(nome, '^Tampa (.*) (Preto|Branco|Lilás|Amarelo|Verde|Vermelho|Cinza Grafite|Dourado|Azul|Roxo|Rosa)$', '\\1') where modelo is null and nome like 'Tampa iPhone %'");
   const importName="006_importar_estoque_pdf_2026_07_10";
   if(!(await pool.query("select 1 from schema_migrations where nome=$1",[importName])).rows[0]){
     await pool.query("alter table insumos add column if not exists modelo text");
