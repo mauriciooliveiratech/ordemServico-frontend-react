@@ -50,7 +50,11 @@ export function Overview() {
       <Grid size={{xs:12,lg:4}}><DashboardChart title="Marcas mais finalizadas" subtitle="OS finalizadas por marca" data={dashboard.marcas} dataKey="total" color="#8b5cf6"/></Grid>
     </Grid>
     <OrderTable title="Ordens recentes" orders={dashboard.filtradas.slice(0,10)} />
-    <Dialog open={zeroOpen} onClose={()=>setZeroOpen(false)} fullWidth maxWidth="md"><DialogTitle>Insumos com estoque zerado</DialogTitle><DialogContent><Box sx={{overflowX:"auto"}}><Box component="table" sx={{width:"100%",borderCollapse:"collapse",'& th':{bgcolor:"#f7f9f8",p:1.2,textAlign:"left",fontSize:11},'& td':{p:1.2,borderTop:"1px solid #edf1ef",fontSize:13}}><thead><tr><th>SKU</th><th>INSUMO</th><th>MODELO</th><th>ESTOQUE</th></tr></thead><tbody>{zeroRows}</tbody></Box></Box></DialogContent><DialogActions><Button onClick={()=>setZeroOpen(false)}>Fechar</Button><Button variant="contained" onClick={imprimirZerados} disabled={!insumosZerados.length}>Imprimir lista</Button></DialogActions></Dialog>
+    <Dialog open={zeroOpen} onClose={()=>setZeroOpen(false)} fullWidth maxWidth="md">
+      <DialogTitle>Insumos com estoque zerado</DialogTitle>
+      <DialogContent><Box sx={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}><thead><tr><th>SKU</th><th>INSUMO</th><th>MODELO</th><th>ESTOQUE</th></tr></thead><tbody>{zeroRows}</tbody></table></Box></DialogContent>
+      <DialogActions><Button onClick={()=>setZeroOpen(false)}>Fechar</Button><Button variant="contained" onClick={imprimirZerados} disabled={!insumosZerados.length}>Imprimir lista</Button></DialogActions>
+    </Dialog>
   </Stack>;
 }
 
