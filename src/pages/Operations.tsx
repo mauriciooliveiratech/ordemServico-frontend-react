@@ -1,11 +1,11 @@
-import { Add, ArrowDownward, ArrowUpward, BuildOutlined, CheckCircleOutline, Inventory2Outlined, MoreHoriz, PointOfSaleOutlined, Search, WarningAmber } from "@mui/icons-material";
+import { Add, ArrowDownward, ArrowUpward, BuildOutlined, CheckCircleOutline, Inventory2Outlined, MoreHoriz, PointOfSaleOutlined, Search } from "@mui/icons-material";
 import { Box, Button, Card, Chip, Grid, IconButton, InputAdornment, LinearProgress, MenuItem, Paper, Stack, Tab, Tabs, TextField, Typography } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { api } from "../Services/api";
 
 const money = (value: number) => value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-type OverviewOrder={id:number;numero:string;cliente:string;modelo:string;servico:string;situacao:string;valor:number;custo:number;data_hora?:string};
+type OverviewOrder={id:number;numero:string;cliente:string;modelo:string;marca:string;servico:string;situacao:string;valor:number;custo:number;valor_pago?:number;pago?:boolean;data_hora?:string};
 const stock = [
   { nome: "Tela iPhone 14 Pro OLED", sku: "TEL-IP14P", qtd: 3, min: 5, custo: 690 },
   { nome: "Conector USB-C Samsung", sku: "CON-SAM-03", qtd: 4, min: 8, custo: 38 },
@@ -14,27 +14,41 @@ const stock = [
 ];
 const chart = [{ n: "Jan", v: 18200 }, { n: "Fev", v: 21400 }, { n: "Mar", v: 19800 }, { n: "Abr", v: 24600 }, { n: "Mai", v: 27300 }, { n: "Jun", v: 25900 }, { n: "Jul", v: 31450 }];
 
-const statusColor = (s: string) => s === "Finalizada" ? "success" : s === "Aguardando peça" ? "warning" : s === "Em andamento" ? "info" : "default";
+const statusColor = (s: string) => s === "Finalizado" ? "success" : s === "Pendente" ? "warning" : s === "Manutenção" ? "info" : "default";
 const panel = { border: "1px solid #e2e9e5", borderRadius: 3, boxShadow: "0 3px 14px rgba(28,60,47,.04)" };
 
 export function Overview() {
   const [orders,setOrders]=useState<OverviewOrder[]>([]);
-  useEffect(()=>{api.get("/os").then(r=>setOrders(r.data.slice(0,10))).catch(()=>setOrders([]))},[]);
+  const [periodo,setPeriodo]=useState("semanal");
+  useEffect(()=>{api.get("/os").then(r=>setOrders(r.data)).catch(()=>setOrders([]))},[]);
+  const dashboard=useMemo(()=>{
+    const dias:{[key:string]:number}={diario:1,semanal:7,mensal:30,trimestral:90,semestral:180,anual:365};
+    const totalDias=dias[periodo]||7,agora=new Date(),inicio=new Date(agora);inicio.setHours(0,0,0,0);inicio.setDate(inicio.getDate()-totalDias+1);
+    const filtradas=orders.filter(o=>o.data_hora&&new Date(o.data_hora)>=inicio);
+    const finalizadas=filtradas.filter(o=>o.situacao==="Finalizado"),abertas=filtradas.filter(o=>o.situacao!=="Finalizado");
+    const faturamento=filtradas.filter(o=>o.pago).reduce((s,o)=>s+Number(o.valor_pago||o.valor||0),0);
+    const passo=Math.max(1,Math.ceil(totalDias/12)),barras=[] as {nome:string;faturamento:number;finalizadas:number}[];
+    for(let i=0;i<totalDias;i+=passo){const de=new Date(inicio);de.setDate(de.getDate()+i);const ate=new Date(de);ate.setDate(ate.getDate()+passo);const grupo=filtradas.filter(o=>{const d=new Date(o.data_hora!);return d>=de&&d<ate});barras.push({nome:de.toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"}),faturamento:grupo.filter(o=>o.pago).reduce((s,o)=>s+Number(o.valor_pago||o.valor||0),0),finalizadas:grupo.filter(o=>o.situacao==="Finalizado").length})}
+    const marcas=Object.entries(finalizadas.reduce((acc,o)=>{const marca=o.marca||"Sem marca";acc[marca]=(acc[marca]||0)+1;return acc},{} as Record<string,number>)).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([nome,total])=>({nome,total}));
+    return {filtradas,finalizadas,abertas,faturamento,barras,marcas,entradas:abertas.filter(o=>o.situacao==="Entrada").length,garantias:abertas.filter(o=>o.situacao==="Garantia").length,pendencias:abertas.filter(o=>o.situacao==="Pendente").length};
+  },[orders,periodo]);
   return <Stack spacing={3}>
-    <Box><Typography variant="h4" fontWeight={800}>Bom dia, Maurício 👋</Typography><Typography color="text.secondary">Aqui está o resumo da sua oficina hoje.</Typography></Box>
+    <Stack direction={{xs:"column",sm:"row"}} justifyContent="space-between" gap={2}><Box><Typography variant="h4" fontWeight={800}>Visão Geral</Typography><Typography color="text.secondary">Indicadores operacionais e financeiros da sua empresa.</Typography></Box><TextField select size="small" label="Período" value={periodo} onChange={e=>setPeriodo(e.target.value)} sx={{minWidth:180}}>{[["diario","Diário"],["semanal","Semanal"],["mensal","Mensal"],["trimestral","Trimestral"],["semestral","Semestral"],["anual","Anual"]].map(([v,l])=><MenuItem key={v} value={v}>{l}</MenuItem>)}</TextField></Stack>
     <Grid container spacing={2}>
-      <Metric title="Faturamento no mês" value="R$ 31.450,00" detail="12,5% comparado ao mês anterior" icon={<PointOfSaleOutlined />} positive />
-      <Metric title="Ordens abertas" value="18" detail="6 em andamento" icon={<BuildOutlined />} />
-      <Metric title="Finalizadas no mês" value="42" detail="8,2% comparado ao mês anterior" icon={<CheckCircleOutline />} positive />
-      <Metric title="Estoque crítico" value="3 itens" detail="Necessitam reposição" icon={<WarningAmber />} warning />
+      <Metric title="Faturamento" value={money(dashboard.faturamento)} detail="Somente pagamentos confirmados" icon={<PointOfSaleOutlined />} positive />
+      <Metric title="Ordens abertas" value={String(dashboard.abertas.length)} detail={`${dashboard.entradas} entradas • ${dashboard.garantias} garantias • ${dashboard.pendencias} pendências`} icon={<BuildOutlined />} />
+      <Metric title="Finalizadas" value={String(dashboard.finalizadas.length)} detail={`No período ${periodo}`} icon={<CheckCircleOutline />} positive />
     </Grid>
     <Grid container spacing={3}>
-      <Grid size={{ xs: 12, lg: 8 }}><Paper sx={{ ...panel, p: 3 }}><Stack direction="row" justifyContent="space-between"><Box><Typography fontWeight={800} fontSize={18}>Faturamento mensal</Typography><Typography fontSize={13} color="text.secondary">Receita bruta nos últimos 7 meses</Typography></Box><Chip label="2026" size="small" /></Stack><Box sx={{ height: 270, mt: 3 }}><ResponsiveContainer><BarChart data={chart}><CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#edf1ef"/><XAxis dataKey="n" axisLine={false} tickLine={false}/><YAxis axisLine={false} tickLine={false} tickFormatter={v => `${v/1000}k`}/><Tooltip formatter={(v) => money(Number(v))}/><Bar dataKey="v" fill="#249a6a" radius={[6,6,0,0]} barSize={28}/></BarChart></ResponsiveContainer></Box></Paper></Grid>
-      <Grid size={{ xs: 12, lg: 4 }}><Paper sx={{ ...panel, p: 3, height: "100%" }}><Typography fontWeight={800} fontSize={18}>Estoque crítico</Typography><Typography fontSize={13} color="text.secondary" mb={2}>Itens abaixo do mínimo</Typography>{stock.slice(0,3).map(i => <Box key={i.sku} sx={{ py: 1.5, borderBottom: "1px solid #edf1ef" }}><Stack direction="row" justifyContent="space-between"><Typography fontSize={13} fontWeight={700}>{i.nome}</Typography><Chip size="small" color="error" variant="outlined" label={`${i.qtd} un.`}/></Stack><Typography fontSize={11} color="text.secondary">Mínimo: {i.min} unidades</Typography></Box>)}<Button fullWidth sx={{ mt: 2 }}>Ver todo o estoque</Button></Paper></Grid>
+      <Grid size={{xs:12,lg:4}}><DashboardChart title="Faturamento" subtitle="Valores pagos no período" data={dashboard.barras} dataKey="faturamento" color="#249a6a" currency/></Grid>
+      <Grid size={{xs:12,lg:4}}><DashboardChart title="OS finalizadas" subtitle="Finalizações por período" data={dashboard.barras} dataKey="finalizadas" color="#3978d4"/></Grid>
+      <Grid size={{xs:12,lg:4}}><DashboardChart title="Marcas mais finalizadas" subtitle="OS finalizadas por marca" data={dashboard.marcas} dataKey="total" color="#8b5cf6"/></Grid>
     </Grid>
-    <OrderTable title="Ordens recentes" orders={orders} />
+    <OrderTable title="Ordens recentes" orders={dashboard.filtradas.slice(0,10)} />
   </Stack>;
 }
+
+function DashboardChart({title,subtitle,data,dataKey,color,currency}:{title:string;subtitle:string;data:any[];dataKey:string;color:string;currency?:boolean}){return <Paper sx={{...panel,p:2.5,height:330}}><Typography fontWeight={800} fontSize={17}>{title}</Typography><Typography fontSize={12} color="text.secondary">{subtitle}</Typography><Box sx={{height:245,mt:2}}><ResponsiveContainer><BarChart data={data}><CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#edf1ef"/><XAxis dataKey="nome" axisLine={false} tickLine={false} fontSize={10}/><YAxis axisLine={false} tickLine={false} fontSize={10}/><Tooltip formatter={(v)=>currency?money(Number(v)):Number(v)} labelStyle={{color:"#32463d"}}/><Bar dataKey={dataKey} fill={color} radius={[5,5,0,0]} label={{position:"top",fontSize:10,fill:"#60736b",formatter:(v:any)=>currency?money(Number(v)):v}}/></BarChart></ResponsiveContainer></Box></Paper>}
 
 function Metric({ title, value, detail, icon, positive, warning }: any) { return <Grid size={{ xs: 12, sm: 6, lg: 3 }}><Card sx={{ ...panel, p: 2.5 }}><Stack direction="row" justifyContent="space-between"><Box><Typography color="text.secondary" fontSize={13}>{title}</Typography><Typography fontWeight={800} fontSize={25} mt={.5}>{value}</Typography></Box><Box sx={{ width: 42, height: 42, borderRadius: 2, display: "grid", placeItems: "center", bgcolor: warning ? "#fff3e2" : "#e6f5ee", color: warning ? "#d07a18" : "#21865f" }}>{icon}</Box></Stack><Typography fontSize={11} color={positive ? "success.main" : warning ? "warning.main" : "text.secondary"} mt={1.5}>{positive && <ArrowUpward sx={{ fontSize: 12 }}/>} {detail}</Typography></Card></Grid> }
 
