@@ -9,10 +9,10 @@ const drawerWidth = 248;
 const baseItems = [
   { label: "Visão geral", path: "/", icon: <DashboardOutlined /> },
   { label: "Ordens de serviço", path: "/ordens", icon: <BuildOutlined /> },
+  { label: "Relatórios", path: "/relatorios", icon: <AssessmentOutlined /> },
   { label: "PDV / Vendas", path: "/pdv", icon: <PointOfSaleOutlined /> },
   { label: "Insumos e estoque", path: "/insumos", icon: <Inventory2Outlined /> },
   { label: "Cadastros", path: "/cadastros", icon: <CategoryOutlined /> },
-  { label: "Relatórios", path: "/relatorios", icon: <AssessmentOutlined /> },
 ];
 
 export default function Sidebar({ children, onNovaOS }: { children: React.ReactNode; onNovaOS?: () => void }) {
