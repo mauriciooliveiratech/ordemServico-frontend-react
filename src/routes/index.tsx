@@ -1,22 +1,5 @@
-import { Routes, Route } from "react-router-dom";
-import { Dashboard } from "../pages/Dashboard/Dashboard";
-import { MarcaPage } from "../pages/Cadastros/MarcaPage";
-import { ModeloPage } from "../pages/Cadastros/ModeloPage";
-import { ServicoPage } from "../pages/Cadastros/ServicoPage";
-
-
-export default function RoutesApp() {
-  return (
-    <Routes>
-    
-
-      <Route path="/" element={<Dashboard />} />
-      <Route path="/os" element={<Dashboard />} />
-      <Route path="/Cadastros/marcapage" element={<MarcaPage />} />
-      <Route path="/Cadastros/modelopage" element={<ModeloPage />} />
-      <Route path="/Cadastros/servicopage" element={<ServicoPage />} />
-      
-    </Routes>
-  );
-}
-
+import { Route, Routes } from "react-router-dom";
+import { Inventory, Orders, Overview, Pos, Registrations, Reports } from "../pages/Operations";
+import { Usuarios } from "../pages/Usuarios";
+import { useAuth } from "../contexts/useAuth";
+export default function RoutesApp(){const {usuario}=useAuth(),admin=usuario?.papel==="ADMIN"||usuario?.papel==="PROPRIETARIO";return <Routes><Route path="/" element={<Overview/>}/><Route path="/ordens" element={<Orders/>}/><Route path="/os" element={<Orders/>}/><Route path="/pdv" element={<Pos/>}/><Route path="/insumos" element={<Inventory/>}/><Route path="/cadastros" element={<Registrations/>}/>{admin&&<Route path="/relatorios" element={<Reports/>}/>} {admin&&<Route path="/usuarios" element={<Usuarios/>}/>}<Route path="*" element={<Overview/>}/></Routes> }
