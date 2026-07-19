@@ -18,6 +18,7 @@ try{
   await pool.query("alter table clientes add column if not exists ativo boolean not null default true");
   await pool.query("alter table ordens_servico add column if not exists insumo_id bigint references insumos(id)");
   await pool.query("alter table ordens_servico add column if not exists insumo_baixado boolean not null default false");
+  await pool.query("alter table ordens_servico add column if not exists data_hora timestamptz");
   await pool.query("update insumos set modelo=regexp_replace(nome, '^Tampa (.*) (Preto|Branco|Lilás|Amarelo|Verde|Vermelho|Cinza Grafite|Dourado|Azul|Roxo|Rosa)$', '\\1') where modelo is null and nome like 'Tampa iPhone %'");
   const importName="006_importar_estoque_pdf_2026_07_10";
   if(!(await pool.query("select 1 from schema_migrations where nome=$1",[importName])).rows[0]){
