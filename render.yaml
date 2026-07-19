@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: oficina-os-saas
+    runtime: node
+    plan: starter
+    region: ohio
+    buildCommand: npm install && npm run build && cd server && npm install --omit=dev
+    startCommand: node server/src/migrate.js && node server/src/index.js
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: oficina-os-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        value: https://oficina-os-saas.onrender.com
+
+databases:
+  - name: oficina-os-db
+    plan: basic-256mb
+    region: ohio
+    databaseName: oficina_os
+    user: oficina_os
+    ipAllowList: []
